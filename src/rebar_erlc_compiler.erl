@@ -405,16 +405,19 @@ update_erlcinfo_fun(G, Dirs) ->
 update_erlcinfo(G, Dirs, Source) ->
     case digraph:vertex(G, Source) of
         {_, LastUpdated} ->
+            ?WARN("Checking Last Mod: ~p~n", [Source]),
             case filelib:last_modified(Source) of
                 0 ->
                     %% The file doesn't exist anymore,
                     %% erase it from the graph.
                     %% All the edges will be erased automatically.
                     digraph:del_vertex(G, Source),
+                    ?WARN("Deleted (~s)~n",[Source]),
                     modified;
                 LastModified when LastUpdated < LastModified ->
                     modify_erlcinfo(G, Source, LastModified, Dirs);
                 _ ->
+                    
                     Modified = lists:foldl(
                                  update_erlcinfo_fun(G, Dirs),
                                  false, digraph:out_neighbours(G, Source)),
@@ -440,17 +443,21 @@ update_max_modified_deps(G, Source) ->
     MaxModified.
 
 modify_erlcinfo(G, Source, LastModified, Dirs) ->
-    {ok, Fd} = file:open(Source, [read]),
-    Incls = parse_attrs(Fd, []),
-    AbsIncls = expand_file_names(Incls, Dirs),
-    ok = file:close(Fd),
-    digraph:add_vertex(G, Source, LastModified),
-    digraph:del_edges(G, digraph:out_edges(G, Source)),
-    lists:foreach(
-      fun(Incl) ->
-              update_erlcinfo(G, Dirs, Incl),
-              digraph:add_edge(G, Source, Incl)
-      end, AbsIncls),
+    case file:open(Source, [read]) of
+        {ok, Fd} ->
+            Incls = parse_attrs(Fd, []),
+            AbsIncls = expand_file_names(Incls, Dirs),
+            ok = file:close(Fd),
+            digraph:add_vertex(G, Source, LastModified),
+            digraph:del_edges(G, digraph:out_edges(G, Source)),
+            lists:foreach(
+              fun(Incl) ->
+                      update_erlcinfo(G, Dirs, Incl),
+                      digraph:add_edge(G, Source, Incl)
+              end, AbsIncls);
+        {error, enoent} ->
+            ok
+    end,
     modified.
 
 restore_erlcinfo(G, InclDirs) ->
