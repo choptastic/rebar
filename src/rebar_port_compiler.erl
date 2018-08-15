@@ -650,17 +650,17 @@ default_env() ->
      {"DRV_CC_TEMPLATE",
       "$CC -c $CFLAGS $DRV_CFLAGS $PORT_IN_FILES -o $PORT_OUT_FILE"},
      {"DRV_LINK_TEMPLATE",
-      "$CC $PORT_IN_FILES $LDFLAGS $DRV_LDFLAGS -o $PORT_OUT_FILE"},
+      "$CC $PORT_IN_FILES $LDFLAGS $DRV_LDFLAGS -o $PORT_OUT_FILE $ERL_LIBS $LIBS"},
      {"DRV_LINK_CXX_TEMPLATE",
-      "$CXX $PORT_IN_FILES $LDFLAGS $DRV_LDFLAGS -o $PORT_OUT_FILE"},
+      "$CXX $PORT_IN_FILES $LDFLAGS $DRV_LDFLAGS -o $PORT_OUT_FILE $ERL_LIBS $LIBS"},
      {"EXE_CXX_TEMPLATE",
       "$CXX -c $CXXFLAGS $EXE_CFLAGS $PORT_IN_FILES -o $PORT_OUT_FILE"},
      {"EXE_CC_TEMPLATE",
       "$CC -c $CFLAGS $EXE_CFLAGS $PORT_IN_FILES -o $PORT_OUT_FILE"},
      {"EXE_LINK_TEMPLATE",
-      "$CC $PORT_IN_FILES $LDFLAGS $EXE_LDFLAGS -o $PORT_OUT_FILE"},
+      "$CC $PORT_IN_FILES $LDFLAGS $EXE_LDFLAGS -o $PORT_OUT_FILE $ERL_LIBS $LIBS"},
      {"EXE_LINK_CXX_TEMPLATE",
-      "$CXX $PORT_IN_FILES $LDFLAGS $EXE_LDFLAGS -o $PORT_OUT_FILE"},
+      "$CXX $PORT_IN_FILES $LDFLAGS $EXE_LDFLAGS -o $PORT_OUT_FILE $ERL_LIBS $LIBS"},
      {"DRV_CFLAGS" , "-g -Wall -fPIC -MMD $ERL_CFLAGS"},
      {"DRV_LDFLAGS", "-shared $ERL_LDFLAGS"},
      {"EXE_CFLAGS" , "-g -Wall -fPIC -MMD $ERL_CFLAGS"},
@@ -673,7 +673,8 @@ default_env() ->
                        "\" "
                       ])},
      {"ERL_EI_LIBDIR", lists:concat(["\"", erl_interface_dir(lib), "\""])},
-     {"ERL_LDFLAGS"  , " -L$ERL_EI_LIBDIR -lerl_interface -lei"},
+     {"ERL_LDFLAGS"  , "-L$ERL_EI_LIBDIR"},
+     {"ERL_LIBS"     , "-lerl_interface -lei"},
      {"ERLANG_ARCH"  , rebar_utils:wordsize()},
      {"ERLANG_TARGET", rebar_utils:get_arch()},
 
@@ -711,19 +712,19 @@ default_env() ->
      {"win32", "DRV_CC_TEMPLATE",
       "$CC /c $CFLAGS $DRV_CFLAGS $PORT_IN_FILES /Fo$PORT_OUT_FILE"},
      {"win32", "DRV_LINK_TEMPLATE",
-      "$LINKER $PORT_IN_FILES $LDFLAGS $DRV_LDFLAGS /OUT:$PORT_OUT_FILE"},
+      "$LINKER $PORT_IN_FILES $LDFLAGS $DRV_LDFLAGS $ERL_LIBS $LIBS /OUT:$PORT_OUT_FILE"},
      %% DRV_* and EXE_* Templates are identical
      {"win32", "EXE_CXX_TEMPLATE",
       "$CXX /c $CXXFLAGS $EXE_CFLAGS $PORT_IN_FILES /Fo$PORT_OUT_FILE"},
      {"win32", "EXE_CC_TEMPLATE",
       "$CC /c $CFLAGS $EXE_CFLAGS $PORT_IN_FILES /Fo$PORT_OUT_FILE"},
      {"win32", "EXE_LINK_TEMPLATE",
-      "$LINKER $PORT_IN_FILES $LDFLAGS $EXE_LDFLAGS /OUT:$PORT_OUT_FILE"},
+      "$LINKER $PORT_IN_FILES $LDFLAGS $EXE_LDFLAGS $ERL_LIBS $LIBS /OUT:$PORT_OUT_FILE"},
      %% ERL_CFLAGS are ok as -I even though strictly it should be /I
      {"win32", "ERL_LDFLAGS",
       " /LIBPATH:$ERL_EI_LIBDIR erl_interface.lib ei.lib"},
      {"win32", "DRV_CFLAGS", "/Zi /Wall $ERL_CFLAGS"},
-     {"win32", "DRV_LDFLAGS", "/DLL $ERL_LDFLAGS"}
+     {"win32", "DRV_LDFLAGS", "/DLL $ERL_LDFLAGS $ERL_LIBS $LIBS"}
     ].
 
 get_tool(Arch, Tool, Default) ->
