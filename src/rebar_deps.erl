@@ -198,7 +198,7 @@ do_check_deps(Config) ->
     DepOwners = rebar_config:get_xconf(Config2, depowner, dict:new()),
 
     %% check for conflicting deps
-    _ = [?ERROR("Conflicting dependencies for ~p: ~p~n",
+    _ = [?WARN("Conflicting dependencies for ~p: ~p~n",
                 [K, [{"From: " ++ string:join(dict:fetch(D, DepOwners), ", "),
                       {D#dep.vsn_regex, D#dep.source}} || D <- V]])
          || {K, V} <- dict:to_list(
