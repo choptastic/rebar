@@ -528,7 +528,8 @@ expand_file_names(Files, Dirs) ->
         list()) -> ok | {ok, any()} | {error, any(), any()}.
 internal_erl_compile(Config, Source, OutDir, ErlOpts) ->
     ok = filelib:ensure_dir(OutDir),
-    Opts = [{outdir, OutDir}] ++ ErlOpts ++ [{i, "include"}, return],
+    Opts0 = [{outdir, OutDir}] ++ ErlOpts ++ [{i, "include"}, return],
+    Opts = maybe_add_compile_info(Opts0),
     case compile:file(Source, Opts) of
         {ok, _Mod} ->
             ok;
@@ -537,6 +538,18 @@ internal_erl_compile(Config, Source, OutDir, ErlOpts) ->
         {error, Es, Ws} ->
             rebar_base_compiler:error_tuple(Config, Source, Es, Ws, Opts)
     end.
+
+maybe_add_compile_info(Opts) ->
+    CompileInfo = case lists:member(deterministic, Opts) of
+        true ->
+            [];
+        false ->
+            %% Capture Outdir and Include directories as compile_opts
+            CompInfo = [{K, V} || {K, V} <- Opts, lists:member(K, [outdir, i])],
+            [{compile_info, CompInfo}]
+    end,
+    CompileInfo ++ Opts.
+
 
 -spec compile_mib(file:filename(), file:filename(),
                   rebar_config:config()) -> 'ok'.
