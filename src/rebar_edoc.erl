@@ -57,7 +57,7 @@ doc(Config, File) ->
     {ok, Config1, AppName, _AppData} =
         rebar_app_utils:load_app_file(Config, File),
 
-    case needs_regen(EDocOpts) of
+    case lists:keyfind(new, 1, EDocOpts) =:= {new, true} orelse needs_regen(EDocOpts) of
         true ->
             ?INFO("Regenerating edocs for ~p\n", [AppName]),
             ok = edoc:application(AppName, ".", EDocOpts);
