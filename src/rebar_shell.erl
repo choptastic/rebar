@@ -55,12 +55,22 @@ shell(_Config, _AppFile) ->
     %% set any process that had a reference to the old user's group leader to the
     %% new user process
     _ = [erlang:group_leader(whereis(user), Pid) || Pid <- NeedsUpdate],
-    %% enable error_logger's tty output
-    ok = error_logger:swap_handler(tty),
-    %% disable the simple error_logger (which may have been added multiple
-    %% times). removes at most the error_logger added by init and the
-    %% error_logger added by the tty handler
-    ok = remove_error_handler(3),
+    case erlang:function_exported(logger, module_info, 0) of
+        false ->
+            %% Old style logger had a lock-up issue and other problems related
+            %% to group leader handling.
+            %% enable error_logger's tty output
+            error_logger:swap_handler(tty),
+            %% disable the simple error_logger (which may have been added
+            %% multiple times). removes at most the error_logger added by
+            %% init and the error_logger added by the tty handler
+            remove_error_handler(3),
+            %% reset the tty handler once more for remote shells
+            error_logger:swap_handler(tty);
+        true ->
+            %% This is no longer a problem with the logger interface
+            ok
+    end,
     %% this call never returns (until user quits shell)
     timer:sleep(infinity).
 
