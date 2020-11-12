@@ -35,14 +35,17 @@
 
 -include("rebar.hrl").
 
--ifdef(OTP_RELEASE).
--if(?OTP_RELEASE < 23).
--define(ERL_INTERFACE, "-lerl_interface ").
--endif.
--endif.
--ifndef(ERL_INTERFACE).
--define(ERL_INTERFACE, "").
--endif.
+erl_interface() ->
+    Rel = list_to_integer(erlang:system_info(otp_release)),
+    if
+        Rel >= 23 ->
+            "";
+        true ->
+            "-lerl_interface"
+    end.
+
+-define(ERL_INTERFACE, erl_interface()).
+
 
 -record(spec, {type::'drv' | 'exe',
                link_lang::'cc' | 'cxx',
@@ -146,7 +149,7 @@ info_help(Description) ->
        "           CXXFLAGS - C++ compiler~n"
        "           LDFLAGS  - Link flags~n"
        "           ERL_CFLAGS  - default -I paths for erts and ei~n"
-       "           ERL_LDFLAGS - default -L and " ?ERL_INTERFACE "-lei~n"
+       "           ERL_LDFLAGS - default -L and " ++ ?ERL_INTERFACE ++ " -lei~n"
        "           DRV_CFLAGS  - flags that will be used for compiling~n"
        "           DRV_LDFLAGS - flags that will be used for linking~n"
        "           EXE_CFLAGS  - flags that will be used for compiling~n"
@@ -683,7 +686,7 @@ default_env() ->
                       ])},
      {"ERL_EI_LIBDIR", lists:concat(["\"", erl_interface_dir(lib), "\""])},
      {"ERL_LDFLAGS"  , "-L$ERL_EI_LIBDIR"},
-     {"ERL_LIBS"     , ?ERL_INTERFACE "-lei"},
+     {"ERL_LIBS"     , ?ERL_INTERFACE ++ " -lei"},
      {"ERLANG_ARCH"  , rebar_utils:wordsize()},
      {"ERLANG_TARGET", rebar_utils:get_arch()},
 
